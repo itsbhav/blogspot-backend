@@ -60,7 +60,6 @@ const login = async (req, res) => {
 // @access Public - because access token has expired
 const refresh = (req, res) => {
   const cookies = req.cookies;
-
   if (!cookies?.jwt) return res.status(401).json({ message: "Unauthorized" });
 
   const refreshToken = cookies.jwt;
@@ -99,7 +98,16 @@ const refresh = (req, res) => {
 const logout = (req, res) => {
   const cookies = req.cookies;
   if (!cookies?.jwt) return res.sendStatus(204); //No content
-  res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
+  res.setHeader(
+    "Set-Cookie",
+    cookie.serialize("jwt", "", {
+      httpOnly: true,
+      maxAge: 7*60*60*1000*24, // Set the maxAge to 0 (or a negative value)
+      sameSite: "None",
+      secure: true,
+      partitioned:true
+    })
+  );
   res.json({ message: "Cookie cleared" });
 };
 
