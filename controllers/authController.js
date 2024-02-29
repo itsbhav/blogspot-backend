@@ -1,7 +1,7 @@
 const User = require('../models/User')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-
+const cookie=require('cookie')
 // @desc Login
 // @route POST /auth
 // @access Public
@@ -40,6 +40,11 @@ const login = async (req, res) => {
     )
 
     // Create secure cookie with refresh token 
+    res.setHeader('Set-Cookie', cookie.serialize('name', "Hello Cookie", {
+      httpOnly: true,
+        maxAge: 60 * 60 * 24 * 7, // 1 week;
+        partitioned:true
+    }));
     res.cookie('jwt', refreshToken, {
         httpOnly: true, //accessible only by web server 
         secure: true, //https
