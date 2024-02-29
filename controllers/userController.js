@@ -1,8 +1,8 @@
 const User = require("../models/User");
-// const Note = require('../models/Note')
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { logout } = require("./authController");
+const cookie = require("cookie");
+
 // @desc Get all users
 // @route GET /users
 // @access Private
@@ -74,7 +74,7 @@ const handleFriendReq = async (req, res) => {
   }
 
   if (id.toString() === reqToId.toString()) {
-    return res.status(400).json({message:"Bad request"})
+    return res.status(400).json({ message: "Bad request" });
   }
   // Does the user exist to update?
   const user = await User.findById(id).select("-password").exec();
@@ -84,13 +84,19 @@ const handleFriendReq = async (req, res) => {
   }
   // console.log(reqToId);
   // console.log(id);
-  const alreadyReq = user.requested.find((i) => i.toString() === reqToId.toString());
+  const alreadyReq = user.requested.find(
+    (i) => i.toString() === reqToId.toString()
+  );
 
   if (alreadyReq) {
-    user.requested = user.requested.filter((i) => i.toString() !== reqToId.toString());
-    anotherUser.accept = anotherUser.accept.filter((i) => i.toString() !== id.toString());
-    await user.save()
-    await anotherUser.save()
+    user.requested = user.requested.filter(
+      (i) => i.toString() !== reqToId.toString()
+    );
+    anotherUser.accept = anotherUser.accept.filter(
+      (i) => i.toString() !== id.toString()
+    );
+    await user.save();
+    await anotherUser.save();
     return res.json({ message: "Unrequested" });
   }
 
@@ -125,7 +131,7 @@ const handleAcceptReq = async (req, res) => {
   const { reqToId, accepted } = req.body;
   // console.log(reqToId, accepted)
   // Confirm data
-  if (!id || !reqToId|| typeof accepted!=="boolean") {
+  if (!id || !reqToId || typeof accepted !== "boolean") {
     return res.status(400).json({ message: "All fields are required" });
   }
 
@@ -136,8 +142,8 @@ const handleAcceptReq = async (req, res) => {
     return res.status(400).json({ message: "User not found" });
   }
   user.accept = user.accept.filter((i) => i.toString() !== reqToId.toString());
-  anotherUser.requested = anotherUser.requested.filter((i)=>
-    i.toString() !== id.toString()
+  anotherUser.requested = anotherUser.requested.filter(
+    (i) => i.toString() !== id.toString()
   );
   if (!accepted) {
     await user.save();
@@ -204,13 +210,16 @@ const createNewUser = async (req, res) => {
     );
 
     // Create secure cookie with refresh token
-    res.cookie("jwt", refreshToken, {
-      httpOnly: true, //accessible only by web server
-      secure: true, //https
-      sameSite: "None", //cross-site cookie
-      Partitioned:true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
-    });
+    res.setHeader(
+      "Set-Cookie",
+      cookie.serialize("jwt", refreshToken, {
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 7 * 1000, // 1 week;
+        partitioned: true,
+        sameSite: "None",
+        secure: true,
+      })
+    );
 
     // Send accessToken containing username and roles
     res.json({ accessToken });
@@ -227,7 +236,7 @@ const updateUser = async (req, res) => {
   if (!id) {
     return res.status(400).json({ message: "Unauthorized" });
   }
-  const { username, password, imageUrl, about,displayname } = req.body;
+  const { username, password, imageUrl, about, displayname } = req.body;
 
   // Confirm data
   if (!id || !username) {
@@ -287,9 +296,9 @@ const deleteUser = async (req, res) => {
   }
 
   const result = await user.deleteOne();
-  const cookies = req.cookies
-  if (!cookies?.jwt) return res.sendStatus(204) //No content
-  res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true })
+  const cookies = req.cookies;
+  if (!cookies?.jwt) return res.sendStatus(204); //No content
+  res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
   const reply = `Username ${result.username} with ID ${result._id} deleted`;
 
   return res.json(reply);
@@ -298,7 +307,7 @@ const getUsersBySearch = async (req, res) => {
   // console.log("bbbb")
   if (!req?.id) return res.json({ message: "Invalid Query" });
   const { searchInput } = req?.params;
-  if(!searchInput)searchInput=""
+  if (!searchInput) searchInput = "";
   // Search for users with matching username or displayname (case-insensitive)
   const users = await User.find({
     $or: [
