@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const cookie = require("cookie");
+// const cookie = require("cookie");
 // @desc Login
 // @route POST /auth
 // @access Public
@@ -40,16 +40,13 @@ const login = async (req, res) => {
   );
 
   // Create secure cookie with refresh token
-  res.setHeader(
-    "Set-Cookie",
-    cookie.serialize("jwt", refreshToken, {
-      httpOnly: true,
-      maxAge: 60 * 60 * 24 * 7 * 1000, // 1 week;
-      partitioned: true,
-      sameSite: "None",
-      secure: true,
-    })
-  );
+ res.cookie('jwt', refreshToken, {
+        httpOnly: true, //accessible only by web server 
+        secure: true, //https
+        sameSite: 'None', //cross-site cookie 
+      maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+        partitioned:true
+ })
 
   // Send accessToken containing username and roles
   res.json({ accessToken });
@@ -98,16 +95,13 @@ const refresh = (req, res) => {
 const logout = (req, res) => {
   const cookies = req.cookies;
   if (!cookies?.jwt) return res.sendStatus(204); //No content
-  res.setHeader(
-    "Set-Cookie",
-    cookie.serialize("jwt", "", {
-      httpOnly: true,
-      maxAge: 7*60*60*1000*24, // Set the maxAge to 0 (or a negative value)
-      sameSite: "None",
-      secure: true,
-      partitioned:true
+ res.clearCookie('jwt', {
+        httpOnly: true, //accessible only by web server 
+        secure: true, //https
+        sameSite: 'None', //cross-site cookie 
+       maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+        partitioned:true
     })
-  );
   res.json({ message: "Cookie cleared" });
 };
 
