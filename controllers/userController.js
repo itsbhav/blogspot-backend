@@ -10,7 +10,6 @@ const getUsersById = async (req, res) => {
   if (!req?.id) return res.json({ message: "Invalid Query" });
   const { id } = req;
   const { id: userId } = req?.params;
-  // console.log("kmkm",userId)
   // console.log(userId)
   try {
     if (userId === "usersList" || !userId) {
@@ -20,7 +19,6 @@ const getUsersById = async (req, res) => {
         .populate("accept", "username displayname imageUrl")
         .populate("requested", "username displayname imageUrl")
         .lean();
-      // console.log(user)
       return res.json(user);
     }
     const user = await User.findById(userId)
@@ -29,14 +27,13 @@ const getUsersById = async (req, res) => {
       .populate("accept", "username displayname imageUrl")
       .populate("requested", "username displayname imageUrl")
       .lean();
-    // console.log(user)
     // If no users
     if (!user) {
       return res.status(400).json({ message: "No users found" });
     }
     return res.json(user);
   } catch (err) {
-    return res.status(400).json({ message: "error" });
+    return res.status(400).json({ message: 'No such user exist' });
   }
 };
 
