@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <h1>Hi <%=(username)%>, please change your password here. </h1>
-    <form action="/secure/submit" method="post">
+    <form action="/secure/submit" method="post" class="form">
+        <div>Hi <%=(username)%>, please change your password here. </div>
         <label for="pwd">Password</label>
         <input type="password" name="password" id="pwd" placeholder="Enter Your Password" />
         <input type="hidden" name="id" value="<%= id %>" />
