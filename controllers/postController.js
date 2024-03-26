@@ -1,9 +1,10 @@
 const Post = require("../models/Post");
 const User = require("../models/User");
-
+const mongoose=require('mongoose')
 const randomPosts = async (req, res) => {
+  const Array = [new mongoose.Types.ObjectId(process.env.OFFICIAL_ACCOUNT), new mongoose.Types.ObjectId(process.env.DEV_ACC)]
   const randomPosts = await Post.aggregate([
-    { $match: { public: true } },
+    { $match: { public: true,user:{$in:Array} } },
     { $sample: { size: 2 } },
   ]);
   if (!randomPosts) return res.status(404).json({ message: "No data found" });
@@ -18,12 +19,12 @@ const getAllPost = async (req, res) => {
   if(!id)return res.status(403).json({message:"Forbidden"})
   if (id) fri = await User.findById(id).select("friendList").exec();
   const Array = [...fri.friendList, id];
-  const Publicpost = await Post.find({ public: true }).populate("user", "imageUrl displayname").lean();
+  const Publicpost = await Post.find({ public: true }).populate("user", "imageUrl displayname verified").lean();
   // console.log(Publicpost)
   const PrivatePost = await Post.find({
     public: false,
     user: { $in: Array },
-  }).populate("user", "imageUrl displayname").lean();
+  }).populate("user", "imageUrl displayname verified").lean();
   // console.log(PrivatePost)
   const post = [...Publicpost, ...PrivatePost];
   if (!post?.length) {

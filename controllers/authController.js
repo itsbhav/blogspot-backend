@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 // @route POST /auth
 // @access Public
 const login = async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password,persist } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ message: "All fields are required" });
@@ -40,13 +40,24 @@ const login = async (req, res) => {
   );
 
   // Create secure cookie with refresh token
- res.cookie('jwt', refreshToken, {
+  if (persist === true) {
+    res.cookie('jwt', refreshToken, {
+      httpOnly: true, //accessible only by web server 
+      secure: true, //https
+      sameSite: 'None', //cross-site cookie 
+      maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+      partitioned: true
+    })
+  }
+ else {
+   res.cookie('jwt', refreshToken, {
         httpOnly: true, //accessible only by web server 
         secure: true, //https
         sameSite: 'None', //cross-site cookie 
-      maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+     expires:0, //cookie expiry: set to match rT
         partitioned:true
  })
+  }
 
   // Send accessToken containing username and roles
   res.json({ accessToken });

@@ -10,6 +10,18 @@ const userSchema = new mongoose.Schema({
     default: "Guest User",
     required:true
   },
+  mail: {
+    type: String,
+    default:""
+  },
+  vT: {
+    type: String,
+    default:""
+  },
+  cT: {
+    type: String,
+    default:""
+  },
   password: {
     type: String,
     required: true,
@@ -40,6 +52,11 @@ const userSchema = new mongoose.Schema({
   ],
   about: {
     type: String,
+  },
+  verified: {
+    type: Boolean,
+    default: false,
+    required:true
   },
   friendList: [
     {

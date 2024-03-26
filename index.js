@@ -17,6 +17,10 @@ app.use(cors(corsOptions))
 app.use(express.json({limit:"5mb"}))
 
 app.use(cookieParser())
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json())
+
+app.set("view engine", "ejs");
 
 app.use('/', express.static(path.join(__dirname, 'public')))
 
@@ -24,7 +28,8 @@ app.use('/',require('./routes/root'))
 app.use('/auth', require('./routes/authRoutes'))
 app.use('/users', require('./routes/userRoutes'))
 app.use('/posts', require('./routes/postRoutes'))
-
+app.use('/verify', require("./routes/verify"))
+app.use('/secure', require('./routes/secure'));
 app.all('*', (req, res) => {
     res.status(404)
     if (req.accepts('html')) {

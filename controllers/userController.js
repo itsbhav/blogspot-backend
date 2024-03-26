@@ -15,17 +15,17 @@ const getUsersById = async (req, res) => {
     if (userId === "usersList" || !userId) {
       const user = await User.findById(id)
         .select("-password")
-        .populate("friendList", "username displayname imageUrl")
-        .populate("accept", "username displayname imageUrl")
-        .populate("requested", "username displayname imageUrl")
+        .populate("friendList", "username displayname imageUrl verified")
+        .populate("accept", "username displayname imageUrl verified")
+        .populate("requested", "username displayname imageUrl verified")
         .lean();
       return res.json(user);
     }
     const user = await User.findById(userId)
       .select("-password -requested -accept")
-      .populate("friendList", "username displayname imageUrl")
-      .populate("accept", "username displayname imageUrl")
-      .populate("requested", "username displayname imageUrl")
+      .populate("friendList", "username displayname imageUrl verified")
+      .populate("accept", "username displayname imageUrl verified")
+      .populate("requested", "username displayname imageUrl verified")
       .lean();
     // If no users
     if (!user) {
@@ -48,7 +48,7 @@ const getRecommendations = async (req, res) => {
   const users = await User.find({
     _id: { $nin: [...friendList, id, ...accept, ...requested] },
   })
-    .select("username displayname imageUrl")
+    .select("username displayname imageUrl verified")
     .limit(25)
     .lean();
   // If no users
@@ -160,7 +160,7 @@ const handleAcceptReq = async (req, res) => {
 // @route POST /users
 // @access Private
 const createNewUser = async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password,persist } = req.body;
 
   // Confirm data
   if (!username || !password) {
@@ -205,25 +205,24 @@ const createNewUser = async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: "7d" }
     );
-
-    // Create secure cookie with refresh token
-    // res.setHeader(
-    //   "Set-Cookie",
-    //   cookie.serialize("jwt", refreshToken, {
-    //     httpOnly: true,
-    //     maxAge: 60 * 60 * 24 * 7 * 1000, // 1 week;
-    //     partitioned: true,
-    //     sameSite: "None",
-    //     secure: true,
-    //   })
-    // );
+    if (persist === true) {
     res.cookie('jwt', refreshToken, {
+      httpOnly: true, //accessible only by web server 
+      secure: true, //https
+      sameSite: 'None', //cross-site cookie 
+      maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+      partitioned: true
+    })
+  }
+ else {
+   res.cookie('jwt', refreshToken, {
         httpOnly: true, //accessible only by web server 
         secure: true, //https
         sameSite: 'None', //cross-site cookie 
-      maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+     expires:0, //cookie expiry: set to match rT
         partitioned:true
-    })
+ })
+  }
 
     // Send accessToken containing username and roles
     res.json({ accessToken });
@@ -319,7 +318,7 @@ const getUsersBySearch = async (req, res) => {
       { displayname: { $regex: searchInput, $options: "i" } }, // Case-insensitive
     ],
   })
-    .select("username displayname imageUrl") // Select relevant fields
+    .select("username displayname imageUrl verified") // Select relevant fields
     .lean();
 
   if (!users?.length) {

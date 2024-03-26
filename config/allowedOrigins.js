@@ -1,5 +1,6 @@
 const allowedOrigins = [
-    'https://blogspot-cpa6.onrender.com'
+    process.env.FDOMAIN,
+    process.env.DOMAIN
 ]
 
 module.exports = allowedOrigins
