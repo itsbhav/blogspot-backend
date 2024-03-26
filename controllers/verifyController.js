@@ -17,9 +17,12 @@ const mail = async (req, res) => {
   const { id } = req;
   if (!id) return res.status(403).json({ message: "Unauthorized" });
   const { mail: email } = req?.body;
-  const user = await User.findById(id).select("displayname");
+  const user = await User.findById(id).select("displayname verified");
   if (!user) return res.status(403).json({ message: "Unauthorized" });
   if (!email) return res.status(400).json({ message: "data missing" });
+  if (user?.verified === true) {
+    return res.status(403).json({message:"You are already verified"})
+  }
   try {
     const token = crypto.randomBytes(48).toString("hex");
     const domain = `${process.env.DOMAIN}/verify?token=${token}`;
