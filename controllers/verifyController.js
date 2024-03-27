@@ -57,7 +57,7 @@ const verifyMail = async (req, res) => {
     await user.save();
     return res
       .status(200)
-      .send(`Hi ${user.displayname}, your email has been verified`);
+      .send(`Hi ${user.displayname}, your email has been verified. Please go back to blogSpot app and reresh the blogSpot page.`);
   } catch (err) {
     console.log(err?.message);
     return res
