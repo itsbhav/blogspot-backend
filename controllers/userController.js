@@ -15,9 +15,18 @@ const getUsersById = async (req, res) => {
     if (userId === "usersList" || !userId) {
       const user = await User.findById(id)
         .select("-password")
-        .populate("friendList", "username displayname imageUrl verified")
-        .populate("accept", "username displayname imageUrl verified")
-        .populate("requested", "username displayname imageUrl verified")
+        .populate(
+          "friendList",
+          "username displayname imageUrl verified clap heart thumbsUp"
+        )
+        .populate(
+          "accept",
+          "username displayname imageUrl verified clap heart thumbsUp"
+        )
+        .populate(
+          "requested",
+          "username displayname imageUrl verified clap heart thumbsUp"
+        )
         .lean();
       return res.json(user);
     }
@@ -33,7 +42,7 @@ const getUsersById = async (req, res) => {
     }
     return res.json(user);
   } catch (err) {
-    return res.status(400).json({ message: 'No such user exist' });
+    return res.status(400).json({ message: "No such user exist" });
   }
 };
 
@@ -160,7 +169,7 @@ const handleAcceptReq = async (req, res) => {
 // @route POST /users
 // @access Private
 const createNewUser = async (req, res) => {
-  const { username, password,persist } = req.body;
+  const { username, password, persist } = req.body;
 
   // Confirm data
   if (!username || !password) {
@@ -206,23 +215,22 @@ const createNewUser = async (req, res) => {
       { expiresIn: "7d" }
     );
     if (persist === true) {
-    res.cookie('jwt', refreshToken, {
-      httpOnly: true, //accessible only by web server 
-      secure: true, //https
-      sameSite: 'None', //cross-site cookie 
-      maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
-      partitioned: true
-    })
-  }
- else {
-   res.cookie('jwt', refreshToken, {
-        httpOnly: true, //accessible only by web server 
+      res.cookie("jwt", refreshToken, {
+        httpOnly: true, //accessible only by web server
         secure: true, //https
-        sameSite: 'None', //cross-site cookie 
-     expires:0, //cookie expiry: set to match rT
-        partitioned:true
- })
-  }
+        sameSite: "None", //cross-site cookie
+        maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+        partitioned: true,
+      });
+    } else {
+      res.cookie("jwt", refreshToken, {
+        httpOnly: true, //accessible only by web server
+        secure: true, //https
+        sameSite: "None", //cross-site cookie
+        expires: 0, //cookie expiry: set to match rT
+        partitioned: true,
+      });
+    }
 
     // Send accessToken containing username and roles
     res.json({ accessToken });
