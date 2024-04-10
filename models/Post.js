@@ -24,18 +24,18 @@ const postSchema = new mongoose.Schema(
       required: true,
     },
     reactions: {
-      thumbsUp: {
-        type: Number,
-        default: 0,
-      },
-      clap: {
-        type: Number,
-        default: 0,
-      },
-      heart: {
-        type: Number,
-        default: 0,
-      },
+      thumbsUp: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      }],
+      clap: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      }],
+      heart: [{
+       type: mongoose.Schema.Types.ObjectId,
+       ref: "User",
+      }],
     },
     updatedAt: {
       type: Date,

@@ -170,10 +170,12 @@ const handleReactions = async (req, res) => {
   );
   // console.log(getArray);
   if (!getArray.length) {
-    post.reactions[reactionName] += 1;
+    post.reactions[reactionName]= [...post.reactions[reactionName],user._id];
     user[reactionName] = [...user[reactionName], post._id];
   } else {
-    post.reactions[reactionName] -= 1;
+    post.reactions[reactionName] = post.reactions[reactionName].filter(
+      (i) => i.toString() != user._id.toString()
+    );;
     user[reactionName] = user[reactionName].filter(
       (i) => i.toString() != post._id.toString()
     );
