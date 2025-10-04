@@ -5,8 +5,8 @@ const bcrypt=require('bcrypt')
 
 
 const { google } = require("googleapis");
-const gmail = google.gmail('v1');
-const { CLIENT_IDY, CLIENT_SECRET, REDIRECT_URI } = process.env;
+
+const { CLIENT_IDY, CLIENT_SECRET, REDIRECT_URI, GMAIL_REFRESH} = process.env;
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_IDY,
@@ -14,6 +14,7 @@ const oauth2Client = new google.auth.OAuth2(
   REDIRECT_URI
 );
 
+oauth2Client.setCredentials({refresh_token:GMAIL_REFRESH});
 const accessToken = oauth2Client.getAccessToken(); 
 
 const transporter = nodemailer.createTransport({
