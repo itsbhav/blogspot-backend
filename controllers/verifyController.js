@@ -3,14 +3,28 @@ const User = require("../models/User");
 const crypto = require("crypto");
 const bcrypt=require('bcrypt')
 
+
+const { google } = require("googleapis");
+const gmail = google.gmail('v1');
+const { CLIENT_IDY, CLIENT_SECRET, REDIRECT_URI } = process.env;
+
+const oauth2Client = new google.auth.OAuth2(
+  CLIENT_IDY,
+  CLIENT_SECRET,
+  REDIRECT_URI
+);
+
+const accessToken = oauth2Client.getAccessToken(); 
+
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // Use `true` for port 465, `false` for all other ports
-  auth: {
-    user: process.env.OFFICIAL_MAIL,
-    pass: process.env.PASS,
-  },
+    service: 'gmail',
+    auth: {
+      type: 'OAuth2',
+      user: 'bhaveshjha58650@gmail.com',
+      clientId: process.env.CLIENT_IDY,
+      clientSecret: process.env.CLIENT_SECRET,
+      accessToken: accessToken.token,
+    },
 });
 
 const mail = async (req, res) => {
