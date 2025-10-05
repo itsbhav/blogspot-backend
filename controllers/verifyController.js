@@ -16,23 +16,40 @@ const oauth2Client = new google.auth.OAuth2(
 
 oauth2Client.setCredentials({ refresh_token: GMAIL_REFRESH });
 
-const createTransporter=async()=> {
-  const { token } = await oauth2Client.getAccessToken();
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      type: "OAuth2",
-      user: OFFICIAL_MAIL,
-      clientId: CLIENT_IDY,
-      clientSecret: CLIENT_SECRET,
-      refreshToken: GMAIL_REFRESH,
-      accessToken: token,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    }
+const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+
+const sendMailGmailAPI = async ({ to, subject, html, from }) => {
+  const raw = Buffer.from(
+    `From: ${from}\r\nTo: ${to}\r\nSubject: ${subject}\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n${html}`
+  )
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, ""); // Gmail API requires base64url encoding
+
+  return gmail.users.messages.send({
+    userId: "me",
+    requestBody: { raw },
   });
-}
+};
+
+// const createTransporter=async()=> {
+//   const { token } = await oauth2Client.getAccessToken();
+//   return nodemailer.createTransport({
+//     service: "gmail",
+//     auth: {
+//       type: "OAuth2",
+//       user: OFFICIAL_MAIL,
+//       clientId: CLIENT_IDY,
+//       clientSecret: CLIENT_SECRET,
+//       refreshToken: GMAIL_REFRESH,
+//       accessToken: token,
+//     },
+//     tls: {
+//       rejectUnauthorized: false,
+//     }
+//   });
+// }
 
 const mail = async (req, res) => {
   const { id } = req;
@@ -47,8 +64,8 @@ const mail = async (req, res) => {
   try {
     const token = crypto.randomBytes(48).toString("hex");
     const domain = `${process.env.DOMAIN}/verify?token=${token}`;
-    const transporter=await createTransporter();
-    const info = await transporter.sendMail({
+    // const transporter=await createTransporter();
+    const info = await sendMailGmailAPI({
       from: OFFICIAL_MAIL, // sender address
       to: email, // list of receivers
       subject: "Verify Your Mail", // Subject line
@@ -100,8 +117,8 @@ const passMail = async (req, res) => {
   try {
     const token = crypto.randomBytes(48).toString("hex");
     const domain = `${process.env.DOMAIN}/secure?token=${token}`;
-    const transporter=await createTransporter();
-    const info = await transporter.sendMail({
+    // const transporter=await createTransporter();
+    const info = await sendMailGmailAPI({
       from: OFFICIAL_MAIL, // sender address
       to: user.mail, // list of receivers
       subject: `Change your password`, // Subject line
