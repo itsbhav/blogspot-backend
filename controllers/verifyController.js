@@ -6,7 +6,7 @@ const bcrypt=require('bcrypt')
 
 const { google } = require("googleapis");
 
-const { CLIENT_IDY, CLIENT_SECRET, REDIRECT_URI, GMAIL_REFRESH} = process.env;
+const { CLIENT_IDY, CLIENT_SECRET, REDIRECT_URI, GMAIL_REFRESH,OFFICIAL_MAIL} = process.env;
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_IDY,
@@ -14,19 +14,25 @@ const oauth2Client = new google.auth.OAuth2(
   REDIRECT_URI
 );
 
-oauth2Client.setCredentials({refresh_token:GMAIL_REFRESH});
-const accessToken = oauth2Client.getAccessToken(); 
+oauth2Client.setCredentials({ refresh_token: GMAIL_REFRESH });
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
+const createTransporter=async()=> {
+  const { token } = await oauth2Client.getAccessToken();
+  return nodemailer.createTransport({
+    service: "gmail",
     auth: {
-      type: 'OAuth2',
-      user: 'bhaveshjha58650@gmail.com',
-      clientId: process.env.CLIENT_IDY,
-      clientSecret: process.env.CLIENT_SECRET,
-      accessToken: accessToken.token,
+      type: "OAuth2",
+      user: OFFICIAL_MAIL,
+      clientId: CLIENT_IDY,
+      clientSecret: CLIENT_SECRET,
+      refreshToken: GMAIL_REFRESH,
+      accessToken: token,
     },
-});
+    tls: {
+      rejectUnauthorized: false,
+    }
+  });
+}
 
 const mail = async (req, res) => {
   const { id } = req;
@@ -41,14 +47,16 @@ const mail = async (req, res) => {
   try {
     const token = crypto.randomBytes(48).toString("hex");
     const domain = `${process.env.DOMAIN}/verify?token=${token}`;
+    const transporter=await createTransporter();
     const info = await transporter.sendMail({
-      from: process.env.OFFICIAL_MAIL, // sender address
+      from: OFFICIAL_MAIL, // sender address
       to: email, // list of receivers
       subject: "Verify Your Mail", // Subject line
       html: `<div><b>Hi ${user.displayname}</b>, Greetings from blogSpot.</div>
           <div>Click the link to verify your mail, <a href=${domain}>${domain}</a></div>
           `,
     });
+    console.log(info);
     user.mail = email;
     user.vT = token;
     await user.save();
@@ -92,8 +100,9 @@ const passMail = async (req, res) => {
   try {
     const token = crypto.randomBytes(48).toString("hex");
     const domain = `${process.env.DOMAIN}/secure?token=${token}`;
+    const transporter=await createTransporter();
     const info = await transporter.sendMail({
-      from: process.env.OFFICIAL_MAIL, // sender address
+      from: OFFICIAL_MAIL, // sender address
       to: user.mail, // list of receivers
       subject: `Change your password`, // Subject line
       html: `<div><b>Hi ${user.displayname}</b>, Greetings from blogSpot.</div>
@@ -142,6 +151,7 @@ const verificationSuccess = async (req, res) => {
     return res.status(400).json({message:"Some unexpected error occured, please try again."})
   }
 };
+
 module.exports = {
   mail,
   verifyMail,
